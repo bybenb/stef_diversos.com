@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5 fade-up">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="produto-img-wrapper mb-3" style="height: 400px; border-radius: 15px;">
+                <img src="{{ produto.url_imagem }}" alt="{{ produto.nome }}" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+        </div>
+        <div class="col-md-6">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/" class="text-decoration-none">Home</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ produto.nome }}</li>
+                </ol>
+            </nav>
+            <h1 class="fw-bold">{{ produto.nome }}</h1>
+            <p class="text-muted">{{ produto.categoria.nome if produto.categoria else "Acessórios" }}</p>
+            <h3 class="fw-bold" style="color: var(--rosa-principal);">Kz {{ "%.2f"|format(produto.preco) }}</h3>
+            <hr>
+            <p>{{ produto.descricao }}</p>
+            
+            <div class="mt-4">
+                <label class="fw-bold">Quantidade</label>
+                <div class="input-group mb-3" style="width: 120px;">
+                    <button class="btn btn-outline-secondary" type="button" onclick="alterarQtd(-1)">-</button>
+                    <input type="number" id="qtd-input" class="form-control text-center" value="1" min="1" max="{{ produto.estoque }}">
+                    <button class="btn btn-outline-secondary" type="button" onclick="alterarQtd(1)">+</button>
+                </div>
+                
+                <button class="btn btn-stef btn-lg w-100 py-3" onclick="adicionarAoCarrinho({{ produto.id }})">
+                    <i class="bi bi-cart-plus-fill me-2"></i> Adicionar ao Carrinho
+                </button>
+            </div>
+
+            <div class="mt-4 p-3 bg-light rounded">
+                <p class="mb-1"><i class="bi bi-truck text-success"></i> <strong>Entrega:</strong> 3 a 5 dias úteis</p>
+                <p class="mb-0"><i class="bi bi-arrow-repeat text-primary"></i> <strong>Troca:</strong> 7 dias após o recebimento</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function alterarQtd(valor) {
+    const input = document.getElementById('qtd-input');
+    let qtd = parseInt(input.value) + valor;
+    if(qtd < 1) qtd = 1;
+    if(qtd > {{ produto.estoque }}) qtd = {{ produto.estoque }};
+    input.value = qtd;
+}
+</script>
+{% endblock %}

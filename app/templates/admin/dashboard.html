@@ -1,0 +1,53 @@
+{% extends "admin/base_admin.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Dashboard</h2>
+    <span class="text-muted">Bem-vindo, Administrador!</span>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card p-3 card-dashboard">
+            <h5>Produtos</h5>
+            <h2 class="fw-bold">{{ total_produtos }}</h2>
+            <a href="/admin/produtos" class="text-decoration-none">Ver todos</a>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-3 card-dashboard" style="border-left-color: #d4af37;">
+            <h5>Pedidos</h5>
+            <h2 class="fw-bold">{{ total_pedidos }}</h2>
+            <a href="/admin/pedidos" class="text-decoration-none">Ver todos</a>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-3 card-dashboard" style="border-left-color: #28a745;">
+            <h5>Clientes</h5>
+            <h2 class="fw-bold">{{ total_clientes }}</h2>
+        </div>
+    </div>
+</div>
+
+<h4>Últimos Pedidos</h4>
+<table class="table table-bg-white">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Cliente</th>
+            <th>Total</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for pedido in ultimos_pedidos %}
+        <tr>
+            <td>#{{ pedido.id }}</td>
+            <td>{{ pedido.cliente.nome_completo if pedido.cliente else "Cliente não informado" }}</td>
+            <td>R$ {{ "%.2f"|format(pedido.total) }}</td>
+            <td><span class="badge bg-info">{{ pedido.status }}</span></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
