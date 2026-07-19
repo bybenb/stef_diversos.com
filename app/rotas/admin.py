@@ -4,7 +4,11 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.modelos.banco import obter_sessao
 from app.modelos.entidades import Produto, Categoria, Pedido, Cliente
-from app.core.autenticacao import obter_usuario_admin
+from app.core.autenticacao import (
+    CLERK_PUBLISHABLE_KEY,
+    obter_clerk_frontend_api,
+    obter_usuario_admin,
+)
 from app.core.upload import upload_imagem_cloudinary
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
@@ -13,7 +17,19 @@ templates = Jinja2Templates(directory="app/templates")
 # --- Página de Login (Agora apenas renderiza o HTML com o botão do Clerk) ---
 @router.get("/login", response_class=HTMLResponse)
 async def tela_login(request: Request):
-    return templates.TemplateResponse("admin/login.html", {"request": request})
+    clerk_fapi_url = (
+        obter_clerk_frontend_api(CLERK_PUBLISHABLE_KEY)
+        if CLERK_PUBLISHABLE_KEY
+        else None
+    )
+    return templates.TemplateResponse(
+        "admin/login.html",
+        {
+            "request": request,
+            "clerk_publishable_key": CLERK_PUBLISHABLE_KEY,
+            "clerk_fapi_url": clerk_fapi_url,
+        },
+    )
 
 # --- Dashboard (Protegido pelo Clerk) ---
 @router.get("/dashboard", response_class=HTMLResponse)

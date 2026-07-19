@@ -37,7 +37,12 @@ async def ver_carrinho(request: Request):
 
 
 @router.post("/api/adicionar-ao-carrinho")
-async def adicionar_ao_carrinho(request: Request, produto_id: int, quantidade: int = 1,  db: Session = Depends(obter_sessao)):
+async def adicionar_ao_carrinho(
+    request: Request,
+    produto_id: int = Form(...),
+    quantidade: int = Form(1),
+    db: Session = Depends(obter_sessao),
+):
     produto = db.query(Produto).filter(Produto.id == produto_id).first()
     if not produto:
         return {"erro": "Produto não encontrado"}
@@ -134,6 +139,6 @@ async def contador_carrinho(request: Request):
     return {"total_itens": len(carrinho.itens)}
 
 
-@router.exception_handler(404)
-async def not_found_handler(request: Request, exc):
-    return templates.TemplateResponse("404.html", {"request": request}, status_code=404)    
+# @router.exception_handler(404)
+# async def not_found_handler(request: Request, exc):
+#     return templates.TemplateResponse("404.html", {"request": request}, status_code=404)    

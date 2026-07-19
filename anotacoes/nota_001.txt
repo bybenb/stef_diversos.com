@@ -1,0 +1,5 @@
+Resolva estes 2 problemas: 
+
+- Login com Clerk (`\app\templates\admin\login.html`): no browser vem esse erro na imagem.
+
+- O contador quando em `http://localhost:8000/produto/3` clico em "adicionar no carrinho" : `POST /api/adicionar-ao-carrinho HTTP/1.1" 422 Unprocessable Content`
