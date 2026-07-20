@@ -116,3 +116,11 @@ ON itens_pedido(produto_id);
 -- 
 
 
+
+ALTER TABLE produtos
+ALTER COLUMN url_imagem TYPE TEXT;
+
+ALTER TABLE produtos
+ALTER COLUMN url_imagem SET NOT NULL;
+
+-- 
