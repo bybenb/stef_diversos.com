@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5 fade-up">
+    <h2 class="fw-bold mb-4" style="color: var(--rosa-principal);">Finalizar Pedido</h2>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm p-4">
+                <h4 class="fw-bold mb-3">Dados para Entrega</h4>
+                <form method="POST" action="/checkout/finalizar">
+                    
+                    <div class="mb-3">
+                        <label for="nome" class="form-label">Nome Completo *</label>
+                        <input type="text" class="form-control" id="nome" name="nome" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="email" class="form-label">E-mail *</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="telefone" class="form-label">Telefone / WhatsApp *</label>
+                        <input type="text" class="form-control" id="telefone" name="telefone" required placeholder="Ex: 923 456 789">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="endereco" class="form-label">Endereço de Entrega *</label>
+                        <textarea class="form-control" id="endereco" name="endereco" rows="3" required placeholder="Rua, Bairro, Município, Ponto de referência"></textarea>
+                    </div>
+
+                    <hr class="my-4">
+                    
+                    <h5 class="fw-bold mb-3">Forma de Pagamento</h5>
+                    
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="pagamento" id="multicaixa" value="multicaixa" checked>
+                        <label class="form-check-label" for="multicaixa">
+                            <i class="bi bi-credit-card me-1"></i> Multicaixa Express (Pagamento eletrônico)
+                        </label>
+                    </div>
+                    
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="pagamento" id="cod" value="cod">
+                        <label class="form-check-label" for="cod">
+                            <i class="bi bi-cash-coin me-1"></i> Pagamento na Entrega (COD)
+                        </label>
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-stef btn-lg w-100 py-3">
+                            <i class="bi bi-check-circle-fill me-2"></i> Confirmar Pedido
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Resumo do Pedido na lateral -->
+        <div class="col-md-4 mt-4 mt-md-0">
+            <div class="card border-0 shadow-sm p-4" style="background: #f8f4f4;">
+                <h5 class="fw-bold mb-3">Resumo do Pedido</h5>
+                <hr>
+                {% for id, item in carrinho.itens.items() %}
+                <div class="d-flex justify-content-between small mb-2">
+                    <span>{{ item.nome }} (x{{ item.quantidade }})</span>
+                    <span class="fw-bold">Kz {{ "%.2f"|format(item.preco * item.quantidade) }}</span>
+                </div>
+                {% endfor %}
+                <hr>
+                <div class="d-flex justify-content-between">
+                    <span>Subtotal</span>
+                    <span>Kz {{ "%.2f"|format(carrinho.calcular_total()) }}</span>
+                </div>
+                <div class="d-flex justify-content-between text-success small">
+                    <span>Frete</span>
+                    <span>Grátis</span>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between fs-5 fw-bold">
+                    <span>Total</span>
+                    <span style="color: var(--rosa-principal);">Kz {{ "%.2f"|format(carrinho.calcular_total()) }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

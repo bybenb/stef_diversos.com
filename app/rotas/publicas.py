@@ -68,7 +68,6 @@ async def adicionar_ao_carrinho(
 
 
 
-
 @router.get("/checkout", response_class=HTMLResponse)
 async def tela_checkout(request: Request):
     dados_carrinho = request.session.get("carrinho")
@@ -79,9 +78,91 @@ async def tela_checkout(request: Request):
         
     return templates.TemplateResponse("checkout.html", {
         "request": request,
-        "carrinho": carrinho,
-        "total": carrinho.calcular_total()
+        "carrinho": carrinho
     })
+
+
+
+@router.post("/checkout/finalizar")
+async def finalizar_pedido(
+    request: Request,
+    nome: str = Form(...),
+    email: str = Form(...),
+    telefone: str = Form(...),
+    endereco: str = Form(...),
+    pagamento: str = Form(...),  # 'multicaixa express' ou 'cod'
+    db: Session = Depends(obter_sessao)
+):
+    dados_carrinho = request.session.get("carrinho")
+    carrinho = GerenciadorCarrinho.from_dict(dados_carrinho)
+    
+    if not carrinho.itens:
+        return RedirectResponse(url="/carrinho")
+
+
+    cliente = db.query(Cliente).filter(Cliente.email == email).first()
+    if not cliente:
+        cliente = Cliente(
+            nome_completo=nome, 
+            email=email, 
+            telefone=telefone,
+            endereco_rua=endereco
+        )
+        db.add(cliente)
+        db.commit()
+        db.refresh(cliente)
+
+    status_inicial = "Aguardando Pagamento" if pagamento == "multicaixa" else "Aguardando Entrega (COD)"
+
+
+    pedido = Pedido(
+        cliente_id=cliente.id,
+        status=status_inicial,
+        total=carrinho.calcular_total()
+    )
+    db.add(pedido)
+    db.commit()
+    db.refresh(pedido)
+
+
+
+    for prod_id, item in carrinho.itens.items():
+        produto = db.query(Produto).filter(Produto.id == int(prod_id)).first()
+        if produto:
+            if produto.estoque >= item['quantidade']:
+                produto.estoque -= item['quantidade']
+            else:
+            
+                raise HTTPException(status_code=400, detail=f"Estoque insuficiente para {produto.nome}")
+            
+            item_pedido = ItemPedido(
+                pedido_id=pedido.id,
+                produto_id=produto.id,
+                quantidade=item['quantidade'],
+                preco_unitario=item['preco']
+            )
+            db.add(item_pedido)
+    
+    db.commit()
+
+    request.session["carrinho"] = None
+
+    return RedirectResponse(url=f"/pedido-confirmado/{pedido.id}?metodo={pagamento}", status_code=303)
+
+@router.get("/pedido-confirmado/{pedido_id}", response_class=HTMLResponse)
+async def pedido_confirmado(request: Request, pedido_id: int, db: Session = Depends(obter_sessao)):
+    pedido = db.query(Pedido).filter(Pedido.id == pedido_id).first()
+    if not pedido:
+        return RedirectResponse(url="/")
+    
+    metodo = request.query_params.get("metodo", "multicaixa")
+    
+    return templates.TemplateResponse("pedido_confirmado.html", {
+        "request": request,
+        "pedido": pedido,
+        "metodo": metodo
+    })
+
 
 @router.post("/checkout/finalizar")
 async def finalizar_pedido(
@@ -132,13 +213,11 @@ async def finalizar_pedido(
 
 
 
+
+
 @router.get("/api/carrinho/contador")
 async def contador_carrinho(request: Request):
     dados_carrinho = request.session.get("carrinho")
     carrinho = GerenciadorCarrinho.from_dict(dados_carrinho)
     return {"total_itens": len(carrinho.itens)}
 
-
-# @router.exception_handler(404)
-# async def not_found_handler(request: Request, exc):
-#     return templates.TemplateResponse("404.html", {"request": request}, status_code=404)    
