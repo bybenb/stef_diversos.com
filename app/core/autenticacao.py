@@ -7,11 +7,11 @@ import os
 CLERK_SECRET_KEY = os.getenv("CLERK_SECRET_KEY")
 CLERK_PUBLISHABLE_KEY = os.getenv("CLERK_PUBLISHABLE_KEY")
 
-EMAILS_AUTORIZADOS = {
+EMAILS_AUTORIZADOS = [
     "itsbenyreis@gmail.com",
     "benybkiamvu@gmail.com",
     "estefanianeto20@mail.com"
-}
+]
 
 def obter_clerk_frontend_api(publishable_key: str) -> str:
     encoded = publishable_key.split("_", 2)[2]

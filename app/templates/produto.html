@@ -29,8 +29,11 @@
                     <button class="btn btn-outline-secondary" type="button" onclick="alterarQtd(1)">+</button>
                 </div>
                 
-                <button class="btn btn-stef btn-lg w-100 py-3" onclick="adicionarAoCarrinho({{ produto.id }})">
-                    <i class="bi bi-cart-plus-fill me-2"></i> Adicionar ao Carrinho
+                 <button class="btn btn-stef btn-lg w-100 py-3" onclick="compraLogo()">
+                    Comprar
+                </button>
+                <button class="btn btn-stef btn-lg w-25 py-3" onclick="adicionarAoCarrinho({{ produto.id }})">
+                    <i class="bi bi-cart-plus-fill me-2"></i> 
                 </button>
             </div>
 
@@ -43,12 +46,28 @@
 </div>
 
 <script>
-function alterarQtd(valor) {
-    const input = document.getElementById('qtd-input');
-    let qtd = parseInt(input.value) + valor;
-    if(qtd < 1) qtd = 1;
-    if(qtd > {{ produto.estoque }}) qtd = {{ produto.estoque }};
-    input.value = qtd;
-}
+
+    function alterarQtd(valor) {
+        const input = document.getElementById('qtd-input');
+        let qtd = parseInt(input.value) + valor;
+        if(qtd < 1) qtd = 1;
+        if(qtd > {{ produto.estoque }}) qtd = {{ produto.estoque }};
+        input.value = qtd;}
+    
+    function compraLogo() {
+        const input = document.getElementById('qtd-input');
+        let qtd = parseInt(input.value);
+        if (qtd === 1)  {
+            qtd = 0;
+            adicionarAoCarrinho({{ produto.id }})
+        }
+        setTimeout(() => {
+            window.location.href = '/checkout'
+        }, 2000);
+    }
+    
+
+        
+    
 </script>
 {% endblock %}

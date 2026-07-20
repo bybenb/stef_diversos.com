@@ -168,7 +168,7 @@ async def excluir_produto(
         db.commit()
     return RedirectResponse(url="/admin/produtos", status_code=303)
 
-# --- Pedidos (Protegido) ---
+
 @router.get("/pedidos", response_class=HTMLResponse)
 async def listar_pedidos(
     request: Request, 

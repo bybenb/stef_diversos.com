@@ -73,29 +73,28 @@
 
 
         async function adicionarAoCarrinho(produtoId) {
-        const qtdInput = document.getElementById('qtd-input');
-        const quantidade = qtdInput ? parseInt(qtdInput.value) : 1;
-        
-        try {
-            const response = await fetch('/api/adicionar-ao-carrinho', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `produto_id=${produtoId}&quantidade=${quantidade}`
-            });
+            const qtdInput = document.getElementById('qtd-input');
+            const quantidade = qtdInput ? parseInt(qtdInput.value) : 1;
             
-            const data = await response.json();
-            
-            if (data.mensagem) {
-                // Atualiza o contador do carrinho
-                document.getElementById('cart-count').textContent = data.total_itens;
-                alert(data.mensagem); // Feedback simples
+            try {
+                const response = await fetch('/api/adicionar-ao-carrinho', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `produto_id=${produtoId}&quantidade=${quantidade}`
+                });
+                
+                const data = await response.json();
+                
+                if (data.mensagem) {
+                    document.getElementById('cart-count').textContent = data.total_itens;
+                    alert(data.mensagem); 
+                }
+            } catch (error) {
+                console.error('Erro ao adicionar ao carrinho:', error);
+                alert('Erro ao adicionar produto. Verifique o console.');
             }
-        } catch (error) {
-            console.error('Erro ao adicionar ao carrinho:', error);
-            alert('Erro ao adicionar produto. Verifique o console.');
-        }
     }
     </script>
 </body>

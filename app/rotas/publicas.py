@@ -6,6 +6,8 @@ from app.modelos.entidades import Produto, Categoria
 from app.modelos.banco import obter_sessao
 from app.core.carrinho import GerenciadorCarrinho
 
+from app.modelos.entidades import  Cliente, Pedido, ItemPedido
+
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -83,6 +85,8 @@ async def tela_checkout(request: Request):
 
 
 
+
+
 @router.post("/checkout/finalizar")
 async def finalizar_pedido(
     request: Request,
@@ -155,8 +159,7 @@ async def pedido_confirmado(request: Request, pedido_id: int, db: Session = Depe
     if not pedido:
         return RedirectResponse(url="/")
     
-    metodo = request.query_params.get("metodo", "multicaixa")
-    
+    metodo = request.query_params.get("metodo", "multicaixa")    
     return templates.TemplateResponse("pedido_confirmado.html", {
         "request": request,
         "pedido": pedido,
