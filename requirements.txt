@@ -10,3 +10,4 @@ python-multipart
 cloudinary
 clerk-backend-api
 itsdangerous
+reportlab
