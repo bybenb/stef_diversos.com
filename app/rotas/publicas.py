@@ -1,11 +1,15 @@
+import os
 from fastapi import APIRouter, Request, Depends, Form
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
 from fastapi.templating import Jinja2Templates
+
 from sqlalchemy.orm import Session
+from sqlalchemy import desc
+
+from app.core.gerador_pdf import gerar_fatura_pdf
 from app.modelos.entidades import Produto, Categoria
 from app.modelos.banco import obter_sessao
 from app.core.carrinho import GerenciadorCarrinho
-
 from app.modelos.entidades import  Cliente, Pedido, ItemPedido
 
 
@@ -14,10 +18,35 @@ templates = Jinja2Templates(directory="app/templates")
 
 
 
+
+
 @router.get("/", response_class=HTMLResponse)
 async def home(request: Request, db: Session = Depends(obter_sessao)):
     produtos = db.query(Produto).filter(Produto.esta_ativo == True).limit(8).all()
-    return templates.TemplateResponse("home.html", {"request": request, "produtos": produtos})
+    
+    produtos_recentes = db.query(Produto).filter(Produto.esta_ativo == True).order_by(desc(Produto.data_criacao)).limit(8).all()
+    
+    produtos_promocao = db.query(Produto).filter(Produto.promocao == True, Produto.preco < 100000).limit(6).all()
+    
+    # 3. Categoria específica (ex: Bolsas - id 1, ajuste conforme seu seed)
+    categoria_bolsas = db.query(Categoria).filter(Categoria.nome.ilike('%Bolsas%')).first()
+    produtos_bolsas = []
+    if categoria_bolsas:
+        produtos_bolsas = db.query(Produto).filter(Produto.esta_ativo == True, Produto.categoria_id == categoria_bolsas.id).limit(6).all()
+    
+    return templates.TemplateResponse("home.html", {
+        "request": request,
+        "produtos": produtos,
+        "produtos_recentes": produtos_recentes,
+        "produtos_promocao": produtos_promocao,
+        "produtos_bolsas": produtos_bolsas
+    })    
+    
+    
+
+
+
+
 
 
 
