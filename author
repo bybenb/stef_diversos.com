@@ -2,3 +2,11 @@ Beny B. Reis II
 itsbenyreis@gmail.com
 https://itsbeny.site
 @bybenb or also @bkapa8
+
+
+/admin/dashboard
+
+o componente Clerk  tá torto (está mal posicionado) na pagina. Por favor, ajeite isso. Após resolveres isso, faz  o usuário logado ser levado pra `/dashboard`.
+
+
+Nota: já estou com um terminal aberto  `uvicorn main:app --reload --port 1976`; e estou usando o venv (`./bibliotecas`) para isolar as dependencias do projecto

@@ -17,33 +17,32 @@
             padding: 1.5rem;
         }
 
-        .login-wrapper {
+        .login-container {
             width: 100%;
             max-width: 420px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.25rem;
         }
 
-        .login-header {
+        .login-brand {
+            text-align: center;
+        }
+
+        .login-brand h3 {
             color: #fff;
-            margin-bottom: 1.5rem;
-        }
-
-        .login-header h3 {
             font-weight: bold;
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.35rem;
         }
 
-        .login-header p {
+        .login-brand p {
+            color: rgba(255, 255, 255, 0.9);
             margin: 0;
-            opacity: 0.9;
         }
 
         #clerk-sign-in {
             width: 100%;
-        }
-
-        #clerk-sign-in > div {
-            width: 100% !important;
-            margin: 0 auto;
         }
 
         .loading-text {
@@ -54,8 +53,8 @@
     </style>
 </head>
 <body>
-    <div class="login-wrapper">
-        <div class="login-header text-center">
+    <div class="login-container">
+        <div class="login-brand">
             <h3>Stef Admin</h3>
             <p>Acesse o painel com sua conta Google</p>
         </div>
@@ -95,7 +94,7 @@
                 signInElement.innerHTML = '';
                 Clerk.mountSignIn(signInElement, {
                     afterSignInUrl: '/dashboard',
-                    forceRedirectUrl: '/dashboard',
+                    signInFallbackRedirectUrl: '/dashboard',
                 });
             } catch (err) {
                 console.error('Erro ao carregar Clerk:', err);

@@ -37,12 +37,12 @@ banco.criar_tabelas()
 app.include_router(publicas.router)
 app.include_router(admin.router)
 
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
+
 
 @app.get("/dashboard")
 async def dashboard_redirect():
-    return RedirectResponse(url="/admin/dashboard", status_code=303)
-
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+    return RedirectResponse(url="/admin/dashboard", status_code=302)
 
 
 

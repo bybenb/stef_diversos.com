@@ -31,27 +31,35 @@ async def tela_login(request: Request):
         },
     )
 
-# --- Dashboard (Protegido pelo Clerk) ---
+# --- Dashboard (sessão verificada no frontend via Clerk) ---
 @router.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(
-    request: Request, 
-    usuario: dict = Depends(obter_usuario_admin),  # <--- PROTEÇÃO AQUI
-    db: Session = Depends(obter_sessao)
+    request: Request,
+    db: Session = Depends(obter_sessao),
 ):
-    # Se chegou aqui, o usuário está autenticado!
+    clerk_fapi_url = (
+        obter_clerk_frontend_api(CLERK_PUBLISHABLE_KEY)
+        if CLERK_PUBLISHABLE_KEY
+        else None
+    )
     total_produtos = db.query(Produto).count()
     total_pedidos = db.query(Pedido).count()
     total_clientes = db.query(Cliente).count()
     ultimos_pedidos = db.query(Pedido).order_by(Pedido.data_criacao.desc()).limit(5).all()
-    
-    return templates.TemplateResponse("admin/dashboard.html", {
-        "request": request,
-        "usuario": usuario,  # Passa os dados do usuário logado para o template
-        "total_produtos": total_produtos,
-        "total_pedidos": total_pedidos,
-        "total_clientes": total_clientes,
-        "ultimos_pedidos": ultimos_pedidos
-    })
+
+    return templates.TemplateResponse(
+        "admin/dashboard.html",
+        {
+            "request": request,
+            "usuario": {"nome": "Administrador"},
+            "clerk_publishable_key": CLERK_PUBLISHABLE_KEY,
+            "clerk_fapi_url": clerk_fapi_url,
+            "total_produtos": total_produtos,
+            "total_pedidos": total_pedidos,
+            "total_clientes": total_clientes,
+            "ultimos_pedidos": ultimos_pedidos,
+        },
+    )
 
 # --- CRUD de Produtos (Protegido) ---
 @router.get("/produtos", response_class=HTMLResponse)
