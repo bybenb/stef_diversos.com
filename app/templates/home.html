@@ -1,47 +1,54 @@
 {% extends "base.html" %}
 
 {% block content %}
-<!-- Hero Section -->
 <section class="hero-section fade-up">
     <div class="container text-center">
         <h1 class="display-3 fw-bold gold-text">Stef Diversos</h1>
-        <p class="lead mb-4">Elegância e sofisticação para jovens modernos.</p>
-        <a href="#produtos" class="btn btn-stef-gold btn-lg px-5 rounded-pill">Conhecer Coleção</a>
+        <p class="lead mb-4">Elegância e sofisticação para mulheres modernas.</p>
     </div>
 </section>
 
-<!-- Produtos em Destaque -->
-<section id="produtos" class="container py-5">
-    <div class="text-center mb-5 fade-up">
-        <h2 class="fw-bold" style="color: var(--rosa-principal);">Novidades</h2>
-        <p class="text-muted">Seleção especial para você</p>
+{% macro carrossel_produtos(titulo, produtos, vazio_msg) %}
+<section class="container py-4 fade-up">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="fw-bold" style="color: var(--rosa-principal);">{{ titulo }}</h3>
+        <a href="#" class="text-decoration-none small">Ver todos <i class="bi bi-arrow-right"></i></a>
     </div>
 
-    <div class="row g-4">
+    {% if produtos %}
+    <div class="d-flex flex-nowrap overflow-auto pb-3" style="gap: 20px; scroll-snap-type: x mandatory;">
         {% for produto in produtos %}
-        <div class="col-md-6 col-lg-3 fade-up delay-{{ loop.index % 3 }}">
-            <div class="produto-card h-100">
-                <div class="produto-img-wrapper">
-                    <img src="{{ produto.url_imagem }}" alt="{{ produto.nome }}" loading="lazy">
-                </div>
-                <div class="p-3 text-center">
-                    <h5 class="fw-bold text-truncate">{{ produto.nome }}</h5>
-                    <p class="text-muted small text-truncate">{{ produto.descricao }}</p>
-                    <div class="d-flex justify-content-between align-items-center mt-3">
-                        <span class="fw-bold fs-5" style="color: var(--rosa-principal);">
-                            Kz {{ "%.2f"|format(produto.preco) }}
-                        </span>
-                        <button class="btn btn-stef btn-sm rounded-circle" onclick="adicionarAoCarrinho({{ produto.id }})">
-                            <i class="bi bi-plus-lg"></i>
-                        </button>
-                    </div>
-                    <a href="/produto/{{ produto.id }}" class="btn btn-outline-secondary btn-sm w-100 mt-2 rounded-pill">
-                        Comprar
-                    </a>
+        <div class="produto-card" style="min-width: 240px; flex-shrink: 0; scroll-snap-align: start;">
+            <div class="produto-img-wrapper" style="height: 200px;">
+                <img src="{{ produto.url_imagem }}" alt="{{ produto.nome }}" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+            <div class="p-3 text-center">
+                <h6 class="fw-bold text-truncate m-0">{{ produto.nome }}</h6>
+                <p class="text-muted small text-truncate m-0 mb-2">{{ produto.descricao }}</p>
+                <span class="fw-bold" style="color: var(--rosa-principal);">Kz {{ "%.2f"|format(produto.preco) }}</span>
+                <div class="mt-2">
+                    <button class="btn btn-stef btn-sm rounded-pill px-3" onclick="adicionarAoCarrinho({{ produto.id }})">
+                        <i class="bi bi-cart-plus"></i> Comprar
+                    </button>
                 </div>
             </div>
         </div>
         {% endfor %}
     </div>
+    {% else %}
+    <p class="text-muted text-center">{{ vazio_msg }}</p>
+    {% endif %}
 </section>
+{% endmacro %}
+
+{{ carrossel_produtos("Novidades Lançamento", produtos_recentes, "Nenhum produto recente no momento.") }}
+{{ carrossel_produtos("Promoções Imperdíveis", produtos_promocao, "Nenhuma promoção ativa no momento.") }}
+{{ carrossel_produtos("Bolsas & Acessórios", produtos_bolsas, "Nenhum produto nesta categoria.") }}
+
+<style>
+    .overflow-auto::-webkit-scrollbar { height: 8px; }
+    .overflow-auto::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+    .overflow-auto::-webkit-scrollbar-thumb { background: var(--rosa-principal); border-radius: 10px; }
+    .overflow-auto::-webkit-scrollbar-thumb:hover { background: var(--rosa-claro); }
+</style>
 {% endblock %}
