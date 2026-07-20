@@ -22,6 +22,7 @@ class Produto(Base):
     categoria_id = Column(Integer, ForeignKey('categorias.id'))
     categoria = relationship("Categoria", back_populates="produtos")
     esta_ativo = Column(Boolean, default=True)
+    promocao = Column(Boolean, default=False)
     data_criacao = Column(DateTime, default=datetime.now)
 
 class Cliente(Base):
