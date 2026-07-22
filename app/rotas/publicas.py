@@ -2,6 +2,8 @@ import os
 from fastapi import APIRouter, Request, Depends, Form
 from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.responses import StreamingResponse
+
 
 from httpcore import request
 from sqlalchemy.orm import Session
@@ -277,25 +279,30 @@ async def finalizar_pedido(
 
 
 
+
+
+
+
+
 @router.get("/api/download-fatura/{pedido_id}")
-async def download_fatura(pedido_id: int, db: Session = Depends(obter_sessao)):
+async def download_fatura(pedido_id: int, request: Request, db: Session = Depends(obter_sessao)):
     pedido = db.query(Pedido).filter(Pedido.id == pedido_id).first()
     if not pedido:
         return {"erro": "Pedido não encontrado"}
     
     cliente = db.query(Cliente).filter(Cliente.id == pedido.cliente_id).first()
     itens = db.query(ItemPedido).filter(ItemPedido.pedido_id == pedido_id).all()
-    
     metodo = request.query_params.get("metodo", "Multicaixa Express")
     
-    caminho_pdf = gerar_fatura_pdf(pedido, cliente, itens, metodo)
+    # Gera o PDF em memória
+    pdf_buffer = gerar_fatura_pdf(pedido, cliente, itens, metodo)
     
-    return FileResponse(
-        path=caminho_pdf,
-        media_type='application/pdf',
-        filename=f"Fatura_Stef_{pedido_id}.pdf"
+    # Retorna como arquivo para download
+    return StreamingResponse(
+        pdf_buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=Fatura_Stef_{pedido_id}.pdf"}
     )
-
 
 @router.get("/api/carrinho/contador")
 async def contador_carrinho(request: Request):

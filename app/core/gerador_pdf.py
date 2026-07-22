@@ -1,43 +1,36 @@
-import os
+import io
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from reportlab.lib import colors
-from reportlab.platypus import Table, TableStyle, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import Table, TableStyle
 from reportlab.lib.units import cm
-from reportlab.lib.enums import TA_RIGHT
-
-
-PASTA_FATURAS = "app/static/faturas"
-os.makedirs(PASTA_FATURAS, exist_ok=True)
 
 def gerar_fatura_pdf(pedido, cliente, itens, metodo):
     """
-    Gera um PDF com os dados do pedido e salva na pasta static/faturas.
-    Retorna o caminho do arquivo gerado.
+    Gera um PDF em memória (BytesIO) com os dados do pedido.
+    Retorna um buffer para ser baixado pelo navegador.
     """
-    nome_arquivo = f"{PASTA_FATURAS}/fatura_{pedido.id}.pdf"
-    
-    c = canvas.Canvas(nome_arquivo, pagesize=A4)
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=A4)
     width, height = A4
     
-
+    # Cabeçalho da Empresa
     c.setFont("Helvetica-Bold", 20)
-    c.setFillColor(colors.HexColor("#b74265")) 
+    c.setFillColor(colors.HexColor("#b74265"))
     c.drawString(2*cm, height - 2*cm, "Stef Diversos")
     
     c.setFont("Helvetica", 10)
     c.setFillColor(colors.black)
     c.drawString(2*cm, height - 3*cm, "Fatura do Pedido")
     
-
+    # Informações do Pedido
     c.setFont("Helvetica-Bold", 12)
     c.drawString(2*cm, height - 5*cm, f"Pedido Nº: {pedido.id}")
     c.setFont("Helvetica", 10)
     c.drawString(2*cm, height - 5.8*cm, f"Data: {pedido.data_criacao.strftime('%d/%m/%Y %H:%M')}")
     c.drawString(10*cm, height - 5.8*cm, f"Pagamento: {metodo}")
     
-    
+    # Dados do Cliente
     c.setFont("Helvetica-Bold", 11)
     c.drawString(2*cm, height - 7.5*cm, "Dados do Cliente:")
     c.setFont("Helvetica", 10)
@@ -46,21 +39,19 @@ def gerar_fatura_pdf(pedido, cliente, itens, metodo):
     c.drawString(2*cm, height - 9.9*cm, f"Telefone: {cliente.telefone}")
     c.drawString(2*cm, height - 10.7*cm, f"Endereço: {cliente.endereco_rua}")
     
-    
+    # Tabela de Itens
     c.setFont("Helvetica-Bold", 11)
     c.drawString(2*cm, height - 12.5*cm, "Itens do Pedido:")
-
-
+    
     data = [["Qtd", "Produto", "Preço Unit.", "Subtotal"]]
     for item in itens:
         data.append([
             str(item.quantidade),
             item.produto.nome,
-            f"{item.preco_unitario:.2f} Kz",
-            f" {item.preco_unitario * item.quantidade:.2f} Kz"
+            f"Kz {item.preco_unitario:.2f}",
+            f"Kz {item.preco_unitario * item.quantidade:.2f}"
         ])
     
-
     table = Table(data, colWidths=[2*cm, 7*cm, 4*cm, 4*cm])
     table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#d4af37")),
@@ -78,7 +69,6 @@ def gerar_fatura_pdf(pedido, cliente, itens, metodo):
     table.wrapOn(c, width, height)
     table.drawOn(c, 2*cm, height - 12.5*cm - (len(data)*0.7*cm))
     
-
     y_footer = height - 12.5*cm - (len(data)*0.7*cm) - 1.5*cm
     c.setFont("Helvetica-Bold", 12)
     c.setFillColor(colors.HexColor("#b74265"))
@@ -89,4 +79,7 @@ def gerar_fatura_pdf(pedido, cliente, itens, metodo):
     c.drawString(width/2 - 5*cm, 2*cm, "Obrigado por comprar na Stef Diversos!")
     
     c.save()
-    return nome_arquivo
+    buffer.seek(0)  # Rebobina o buffer para o início
+    return buffer
+
+

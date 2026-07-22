@@ -1,67 +1,72 @@
-from fastapi import APIRouter, Request, Depends, Form, File, UploadFile
+from fastapi import APIRouter, Request, Form, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.modelos.banco import obter_sessao
 from app.modelos.entidades import Produto, Categoria, Pedido, Cliente
-from app.core.autenticacao import (
-    CLERK_PUBLISHABLE_KEY,
-    obter_clerk_frontend_api,
-    obter_usuario_admin,
-)
-from app.core.upload import upload_imagem_cloudinary
+from app.core.autenticacao import obter_usuario_admin
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 templates = Jinja2Templates(directory="app/templates")
 
-# --- Página de Login (Agora apenas renderiza o HTML com o botão do Clerk) ---
+ADMIN_CREDENTIALS = {
+    "itsbenyreis@gmail.com": "Stefiosos2026!",
+    "benybkiamvu@gmail.com": "Stefiosos2026!",
+    "estefanianeto20@gmail.com": "Stefiosos2026!"
+}
+
+
+
 @router.get("/login", response_class=HTMLResponse)
 async def tela_login(request: Request):
-    clerk_fapi_url = (
-        obter_clerk_frontend_api(CLERK_PUBLISHABLE_KEY)
-        if CLERK_PUBLISHABLE_KEY
-        else None
-    )
-    return templates.TemplateResponse(
-        "admin/login.html",
-        {
-            "request": request,
-            "clerk_publishable_key": CLERK_PUBLISHABLE_KEY,
-            "clerk_fapi_url": clerk_fapi_url,
-        },
-    )
+    # Se já estiver logado, redireciona para o dashboard
+    if request.session.get("admin_user"):
+        return RedirectResponse(url="/admin/dashboard")
+    return templates.TemplateResponse("admin/login.html", {"request": request})
 
-# --- Dashboard (sessão verificada no frontend via Clerk) ---
+@router.post("/login")
+async def fazer_login(
+    request: Request,
+    email: str = Form(...),
+    senha: str = Form(...)
+):
+
+    if email in ADMIN_CREDENTIALS and ADMIN_CREDENTIALS[email] == senha:
+        request.session["admin_user"] = email
+        return RedirectResponse(url="/admin/dashboard", status_code=303)
+    else:
+        return templates.TemplateResponse("admin/login.html", {
+            "request": request,
+            "erro": "E-mail ou senha inválidos!"
+        })
+
+@router.get("/logout")
+async def logout(request: Request):
+    request.session.pop("admin_user", None)
+    return RedirectResponse(url="/admin/login", status_code=303)
+
+# --- Dashboard (Protegido) ---
 @router.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(
-    request: Request,
-    db: Session = Depends(obter_sessao),
+    request: Request, 
+    usuario: dict = Depends(obter_usuario_admin),
+    db: Session = Depends(obter_sessao)
 ):
-    clerk_fapi_url = (
-        obter_clerk_frontend_api(CLERK_PUBLISHABLE_KEY)
-        if CLERK_PUBLISHABLE_KEY
-        else None
-    )
     total_produtos = db.query(Produto).count()
     total_pedidos = db.query(Pedido).count()
     total_clientes = db.query(Cliente).count()
     ultimos_pedidos = db.query(Pedido).order_by(Pedido.data_criacao.desc()).limit(5).all()
+    
+    return templates.TemplateResponse("admin/dashboard.html", {
+        "request": request,
+        "usuario": usuario,
+        "total_produtos": total_produtos,
+        "total_pedidos": total_pedidos,
+        "total_clientes": total_clientes,
+        "ultimos_pedidos": ultimos_pedidos
+    })
 
-    return templates.TemplateResponse(
-        "admin/dashboard.html",
-        {
-            "request": request,
-            "usuario": {"nome": "Administrador"},
-            "clerk_publishable_key": CLERK_PUBLISHABLE_KEY,
-            "clerk_fapi_url": clerk_fapi_url,
-            "total_produtos": total_produtos,
-            "total_pedidos": total_pedidos,
-            "total_clientes": total_clientes,
-            "ultimos_pedidos": ultimos_pedidos,
-        },
-    )
-
-# --- CRUD de Produtos (Protegido) ---
+# --- CRUD Produtos (Protegido) ---
 @router.get("/produtos", response_class=HTMLResponse)
 async def listar_produtos(
     request: Request, 
@@ -93,17 +98,15 @@ async def novo_produto_form(
 @router.post("/produtos/novo")
 async def salvar_novo_produto(
     request: Request,
-    usuario: dict = Depends(obter_usuario_admin),  # <--- Protegido
     nome: str = Form(...),
-    imagem: UploadFile = File(...),
     descricao: str = Form(...),
     preco: float = Form(...),
     estoque: int = Form(...),
     url_imagem: str = Form(...),
     categoria_id: int = Form(...),
+    usuario: dict = Depends(obter_usuario_admin),
     db: Session = Depends(obter_sessao)
 ):
-    url_imagem = upload_imagem_cloudinary(imagem)  if imagem else ""
     novo_produto = Produto(
         nome=nome, descricao=descricao, preco=preco, 
         estoque=estoque, url_imagem=url_imagem, categoria_id=categoria_id
@@ -135,13 +138,13 @@ async def editar_produto_form(
 async def salvar_edicao_produto(
     request: Request,
     produto_id: int,
-    usuario: dict = Depends(obter_usuario_admin),
     nome: str = Form(...),
     descricao: str = Form(...),
     preco: float = Form(...),
     estoque: int = Form(...),
     url_imagem: str = Form(...),
     categoria_id: int = Form(...),
+    usuario: dict = Depends(obter_usuario_admin),
     db: Session = Depends(obter_sessao)
 ):
     produto = db.query(Produto).filter(Produto.id == produto_id).first()
@@ -168,7 +171,7 @@ async def excluir_produto(
         db.commit()
     return RedirectResponse(url="/admin/produtos", status_code=303)
 
-
+# --- Pedidos (Protegido) ---
 @router.get("/pedidos", response_class=HTMLResponse)
 async def listar_pedidos(
     request: Request, 
