@@ -13,6 +13,8 @@ from app.modelos.banco import obter_sessao
 from app.core.carrinho import GerenciadorCarrinho
 from app.modelos.entidades import  Cliente, Pedido, ItemPedido
 
+from typing import Optional
+
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -44,6 +46,35 @@ async def home(request: Request, db: Session = Depends(obter_sessao)):
     })    
     
     
+
+
+
+
+
+@router.get("/produtos", response_class=HTMLResponse)
+async def listar_produtos_por_tag(
+    request: Request, 
+    tag: Optional[str] = None, 
+    db: Session = Depends(obter_sessao)
+):
+    query = db.query(Produto).filter(Produto.esta_ativo == True)
+    
+    titulo_pagina = "Todos os Produtos"
+    
+    if tag:
+        query = query.join(Produto.tags).filter(Tag.slug == tag)
+        tag_obj = db.query(Tag).filter(Tag.slug == tag).first()
+        if tag_obj:
+            titulo_pagina = f"Produtos: {tag_obj.nome}"
+    
+    produtos = query.all()
+    
+    return templates.TemplateResponse("produtos_lista.html", {
+        "request": request,
+        "produtos": produtos,
+        "titulo": titulo_pagina,
+        "tag_atual": tag
+    })
 
 
 

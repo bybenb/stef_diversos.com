@@ -1,8 +1,20 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Boolean, Text
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Boolean, Text, Table
 from sqlalchemy.orm import declarative_base, relationship
 from datetime import datetime
 
 Base = declarative_base()
+
+
+
+produto_tag = Table('produto_tag', Base.metadata,
+    Column('produto_id', Integer, ForeignKey('produtos.id'), primary_key=True),
+    Column('tag_id', Integer, ForeignKey('tags.id'), primary_key=True)
+)
+
+
+
+
+
 
 class Categoria(Base):
     __tablename__ = 'categorias'
@@ -25,12 +37,14 @@ class Produto(Base):
     promocao = Column(Boolean, default=False)
     data_criacao = Column(DateTime, default=datetime.now)
 
+    tags = relationship("Tag", secondary=produto_tag, back_populates="produtos")
+
 class Cliente(Base):
     __tablename__ = 'clientes'
     id = Column(Integer, primary_key=True, index=True)
     nome_completo = Column(String(200))
     email = Column(String(200), unique=True, index=True)
-    senha_hash = Column(String(200))  # Use bcrypt para hashear
+    senha_hash = Column(String(200)) 
     telefone = Column(String(20))
     endereco_rua = Column(String(200))
     endereco_numero = Column(String(10))
@@ -59,3 +73,13 @@ class ItemPedido(Base):
     produto = relationship("Produto")
     quantidade = Column(Integer, nullable=False)
     preco_unitario = Column(Float, nullable=False)
+
+
+class Tag(Base):
+    __tablename__ = 'tags'
+    id = Column(Integer, primary_key=True, index=True)
+    nome = Column(String(50), nullable=False)  # Ex: "Adidas", "Promoção"
+    slug = Column(String(50), unique=True, nullable=False)  # Ex: "adidas", "promocao" (para a URL)
+    produtos = relationship("Produto", secondary=produto_tag, back_populates="tags")
+
+

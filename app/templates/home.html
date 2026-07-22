@@ -8,18 +8,27 @@
     </div>
 </section>
 
-{% macro carrossel_produtos(titulo, produtos, vazio_msg) %}
+{% macro carrossel_produtos(titulo, produtos, vazio_msg, tag_slug=None) %}
 <section class="container py-4 fade-up">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h3 class="fw-bold" style="color: var(--rosa-principal);">{{ titulo }}</h3>
-        <a href="#" class="text-decoration-none small">Ver todos <i class="bi bi-arrow-right"></i></a>
+
+        {% if tag_slug %}
+            <a href="/produtos?tag={{ tag_slug }}" class="text-decoration-none small">
+                Ver todos <i class="bi bi-arrow-right"></i>
+            </a>
+        {% else %}
+            <a href="/produtos" class="text-decoration-none small">
+                Ver todos <i class="bi bi-arrow-right"></i>
+            </a>
+        {% endif %}
     </div>
 
     {% if produtos %}
     <div class="d-flex flex-nowrap overflow-auto pb-3" style="gap: 20px; scroll-snap-type: x mandatory;">
         {% for produto in produtos %}
         <div class="produto-card" style="min-width: 240px; flex-shrink: 0; scroll-snap-align: start;">
-            <div class="produto-img-wrapper" style="height: 200px;">
+            <div class="produto-img-wrapper" style="height: 200px;">     
                 <img src="{{ produto.url_imagem }}" alt="{{ produto.nome }}" style="width: 100%; height: 100%; object-fit: cover;">
             </div>
             <div class="p-3 text-center">
@@ -27,7 +36,8 @@
                 <p class="text-muted small text-truncate m-0 mb-2">{{ produto.descricao }}</p>
                 <span class="fw-bold" style="color: var(--rosa-principal);">Kz {{ "%.2f"|format(produto.preco) }}</span>
                 <div class="mt-2">
-                    <button class="btn btn-stef btn-sm rounded-pill px-3" onclick="adicionarAoCarrinho({{ produto.id }})">
+                    <!-- <button class="btn btn-stef btn-sm rounded-pill px-3" onclick="adicionarAoCarrinho({{ produto.id }})"> -->
+                    <button class="btn btn-stef btn-sm rounded-pill px-3" onclick="window.location.href ='/produto/{{ produto.id }}'">
                         <i class="bi bi-cart-plus"></i> Comprar
                     </button>
                 </div>
