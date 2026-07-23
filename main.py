@@ -1,56 +1,55 @@
-import os
+﻿import os
 from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.exceptions import HTTPException
-
 from starlette.middleware.sessions import SessionMiddleware
 from dotenv import load_dotenv
-
 from app.rotas import publicas, admin
 from app.modelos import banco
-from app.templates import templates
+from fastapi.templating import Jinja2Templates  # Importação direta aqui
 
 load_dotenv()
 
-app = FastAPI(title="Stef Diversos", description="Loja virtual em Luanda - By Stef Neto")
+app = FastAPI(title="Stef Diversos")
 
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Em produção, troque pelo domínio do Clerk
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-
+# Sessão (para o carrinho)
 SECRET_KEY = os.getenv("SECRET_KEY")
-if not SECRET_KEY:
-    raise ValueError("Valor na variável SECRET_KEY em falta!")
 app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
 
-# Cria as tabelas no Neon (apenas a primeira execução)
+# Cria as tabelas no banco
 banco.criar_tabelas()
+
+templates = Jinja2Templates(directory="app/templates")
+
 
 app.include_router(publicas.router)
 app.include_router(admin.router)
 
+
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
-
-
-@app.get("/dashboard")
-async def dashboard_redirect():
-    return RedirectResponse(url="/admin/dashboard", status_code=302)
-
-
 
 
 @app.exception_handler(404)
 async def not_found_handler(request: Request, exc: HTTPException):
     return templates.TemplateResponse("404.html", {"request": request}, status_code=404)
 
+
 @app.exception_handler(500)
 async def internal_error_handler(request: Request, exc: Exception):
-    return templates.TemplateResponse("500.html", {"request": request}, status_code=500)
+    # Vamos retornar um texto simples em vez de renderizar um HTML de erro,
+    # pois o erro 500 originalmente aconteceu justamente ao renderizar o template!
+    return HTMLResponse(
+        content="<h1>Erro interno do servidor (500)</h1><p>Ocorreu um erro inesperado. Os logs do Render estão disponíveis para análise.</p>",
+        status_code=500
+    )
