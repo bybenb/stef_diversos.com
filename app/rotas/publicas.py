@@ -38,7 +38,8 @@ async def home(request: Request, db: Session = Depends(obter_sessao)):
     produtos_bolsas = []
     if categoria_bolsas:
         produtos_bolsas = db.query(Produto).filter(Produto.esta_ativo == True, Produto.categoria_id == categoria_bolsas.id).limit(6).all()
-    
+
+    """
     return templates.TemplateResponse("home.html", {
         "request": request,
         "produtos": produtos,
@@ -47,6 +48,18 @@ async def home(request: Request, db: Session = Depends(obter_sessao)):
         "produtos_bolsas": produtos_bolsas
     })    
     
+    """
+    return templates.TemplateResponse(
+    request=request,
+    name="home.html",
+    context={
+        "request": request,
+        "produtos": produtos,
+        "produtos_recentes": produtos_recentes,
+        "produtos_promocao": produtos_promocao,
+        "produtos_bolsas": produtos_bolsas,
+    },
+    )
     
 
 
