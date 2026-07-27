@@ -133,7 +133,7 @@ async def adicionar_ao_carrinho(
     carrinho = GerenciadorCarrinho.from_dict(dados_carrinho)
 
 
-    carrinho.adicionar_item(produto.id, produto.nome, produto.preco, quantidade)
+    carrinho.adicionar_item(produto.id, produto.nome, produto.preco, produto.url_imagem, quantidade)
     request.session["carrinho"] = carrinho.to_dict()
 
     return {

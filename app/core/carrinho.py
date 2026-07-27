@@ -11,6 +11,7 @@ class GerenciadorCarrinho:
             self.itens[produto_id] = {
                 'nome': nome,
                 'preco': preco,
+                'url_imagem': url_imagem,
                 'quantidade': quantidade
             }
 
