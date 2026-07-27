@@ -39,13 +39,16 @@ async def home(request: Request, db: Session = Depends(obter_sessao)):
     if categoria_bolsas:
         produtos_bolsas = db.query(Produto).filter(Produto.esta_ativo == True, Produto.categoria_id == categoria_bolsas.id).limit(6).all()
     
-    return templates.TemplateResponse("home.html", {
+    return templates.TemplateResponse(
+        request=request,
+        name="home.html",
+        context={
         "request": request,
         "produtos": produtos,
         "produtos_recentes": produtos_recentes,
         "produtos_promocao": produtos_promocao,
         "produtos_bolsas": produtos_bolsas
-    })    
+    }) 
     
     
 
@@ -71,12 +74,15 @@ async def listar_produtos_por_tag(
     
     produtos = query.all()
     
-    return templates.TemplateResponse("produtos_lista.html", {
-        "request": request,
-        "produtos": produtos,
-        "titulo": titulo_pagina,
-        "tag_atual": tag
-    })
+    return templates.TemplateResponse(
+        request=request,
+        name="produtos_lista.html",
+        context={
+            "request": request,
+            "produtos": produtos,
+            "titulo": titulo_pagina,
+            "tag_atual": tag
+        })
 
 
 
@@ -89,15 +95,25 @@ async def detalhe_produto(request: Request, produto_id: int, db: Session = Depen
     produto = db.query(Produto).filter(Produto.id == produto_id).first()
     if not produto:
         return RedirectResponse(url="/")
-    return templates.TemplateResponse("produto.html", {"request": request, "produto": produto})
+    return templates.TemplateResponse(
+        request=request,
+        name="produto.html",
+        context={"request": request, "produto": produto})
 
 
 
 @router.get("/carrinho", response_class=HTMLResponse)
-async def ver_carrinho(request: Request):
+async def ver_carrinho(request: Request, db: Session = Depends(obter_sessao)):
+    
+    query = db.query(Produto).filter(Produto.esta_ativo == True)
     dados_carrinho = request.session.get("carrinho")
     carrinho = GerenciadorCarrinho.from_dict(dados_carrinho)
-    return templates.TemplateResponse("carrinho.html", {"request": request, "carrinho": carrinho})
+    prod = query.all()  
+    
+    return templates.TemplateResponse(
+        request=request,
+        name="carrinho.html",
+        context={"request": request, "carrinho": carrinho, "prod": prod})
 
 
 
@@ -141,7 +157,10 @@ async def tela_checkout(request: Request):
     if not carrinho.itens:
         return RedirectResponse(url="/carrinho")
         
-    return templates.TemplateResponse("checkout.html", {
+    return templates.TemplateResponse(
+        request=request,
+        name="checkout.html",
+        context={
         "request": request,
         "carrinho": carrinho
     })
@@ -223,7 +242,10 @@ async def pedido_confirmado(request: Request, pedido_id: int, db: Session = Depe
         return RedirectResponse(url="/")
     
     metodo = request.query_params.get("metodo", "multicaixa")    
-    return templates.TemplateResponse("pedido_confirmado.html", {
+    return templates.TemplateResponse(
+        request=request,
+        name="pedido_confirmado.html",
+        context={
         "request": request,
         "pedido": pedido,
         "metodo": metodo

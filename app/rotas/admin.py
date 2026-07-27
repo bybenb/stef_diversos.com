@@ -22,7 +22,10 @@ async def tela_login(request: Request):
     # Se já estiver logado, redireciona para o dashboard
     if request.session.get("admin_user"):
         return RedirectResponse(url="/admin/dashboard")
-    return templates.TemplateResponse("admin/login.html", {"request": request})
+    return templates.TemplateResponse(
+        request=request,
+        name="admin/login.html",
+        context={"request": request})
 
 @router.post("/login")
 async def fazer_login(
@@ -35,10 +38,7 @@ async def fazer_login(
         request.session["admin_user"] = email
         return RedirectResponse(url="/admin/dashboard", status_code=303)
     else:
-        return templates.TemplateResponse("admin/login.html", {
-            "request": request,
-            "erro": "E-mail ou senha inválidos!"
-        })
+        return templates.TemplateResponse(request=request, name="admin/login.html", context={ "request": request, "erro": "E-mail ou senha inválidos!" })
 
 @router.get("/logout")
 async def logout(request: Request):
@@ -57,14 +57,17 @@ async def dashboard(
     total_clientes = db.query(Cliente).count()
     ultimos_pedidos = db.query(Pedido).order_by(Pedido.data_criacao.desc()).limit(5).all()
     
-    return templates.TemplateResponse("admin/dashboard.html", {
-        "request": request,
-        "usuario": usuario,
-        "total_produtos": total_produtos,
-        "total_pedidos": total_pedidos,
-        "total_clientes": total_clientes,
-        "ultimos_pedidos": ultimos_pedidos
-    })
+    return templates.TemplateResponse(
+        request=request,
+        name="admin/dashboard.html",
+        context={
+            "request": request,
+            "usuario": usuario,
+            "total_produtos": total_produtos,
+            "total_pedidos": total_pedidos,
+            "total_clientes": total_clientes,
+            "ultimos_pedidos": ultimos_pedidos
+        })
 
 # --- CRUD Produtos (Protegido) ---
 @router.get("/produtos", response_class=HTMLResponse)
@@ -74,11 +77,14 @@ async def listar_produtos(
     db: Session = Depends(obter_sessao)
 ):
     produtos = db.query(Produto).order_by(Produto.id.desc()).all()
-    return templates.TemplateResponse("admin/produtos_lista.html", {
-        "request": request,
-        "usuario": usuario,
-        "produtos": produtos
-    })
+    return templates.TemplateResponse(
+        request=request,
+        name="admin/produtos_lista.html",
+        context={
+            "request": request,
+            "usuario": usuario,
+            "produtos": produtos
+        })
 
 @router.get("/produtos/novo", response_class=HTMLResponse)
 async def novo_produto_form(
@@ -87,13 +93,16 @@ async def novo_produto_form(
     db: Session = Depends(obter_sessao)
 ):
     categorias = db.query(Categoria).all()
-    return templates.TemplateResponse("admin/produto_form.html", {
-        "request": request,
-        "usuario": usuario,
-        "produto": None,
-        "categorias": categorias,
-        "titulo": "Novo Produto"
-    })
+    return templates.TemplateResponse(
+        request=request,
+        name="admin/produto_form.html",
+        context={
+            "request": request,
+            "usuario": usuario,
+            "produto": None,
+            "categorias": categorias,
+            "titulo": "Novo Produto"
+        })
 
 @router.post("/produtos/novo")
 async def salvar_novo_produto(
@@ -126,13 +135,16 @@ async def editar_produto_form(
     if not produto:
         return RedirectResponse(url="/admin/produtos")
     categorias = db.query(Categoria).all()
-    return templates.TemplateResponse("admin/produto_form.html", {
-        "request": request,
-        "usuario": usuario,
-        "produto": produto,
-        "categorias": categorias,
-        "titulo": "Editar Produto"
-    })
+    return templates.TemplateResponse(
+        request=request,
+        name="admin/produto_form.html",
+        context={
+            "request": request,
+            "usuario": usuario,
+            "produto": produto,
+            "categorias": categorias,
+            "titulo": "Editar Produto"
+        })
 
 @router.post("/produtos/editar/{produto_id}")
 async def salvar_edicao_produto(
@@ -179,11 +191,14 @@ async def listar_pedidos(
     db: Session = Depends(obter_sessao)
 ):
     pedidos = db.query(Pedido).order_by(Pedido.data_criacao.desc()).all()
-    return templates.TemplateResponse("admin/pedidos_lista.html", {
-        "request": request,
-        "usuario": usuario,
-        "pedidos": pedidos
-    })
+    return templates.TemplateResponse(
+        request=request,
+        name="admin/pedidos_lista.html",
+        context={
+            "request": request,
+            "usuario": usuario,
+            "pedidos": pedidos
+        })
 
 @router.post("/pedidos/status/{pedido_id}")
 async def atualizar_status_pedido(
