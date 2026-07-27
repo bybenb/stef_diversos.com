@@ -50,6 +50,6 @@ async def internal_error_handler(request: Request, exc: Exception):
     # Vamos retornar um texto simples em vez de renderizar um HTML de erro,
     # pois o erro 500 originalmente aconteceu justamente ao renderizar o template!
     return HTMLResponse(
-        content="<h1>Erro interno do servidor (500)</h1><p>Ocorreu um erro inesperado. Os logs do Render estão disponíveis para análise.</p>",
+        content="<h1>Erro interno do servidor (500)</h1><p>Ocorreu um inesperado. Tente atualizar a pagina. Se persistir, contacte-nos, clicando <a href=\"https://wa.link/0m9tbc\">Aqui</a>.</p>",
         status_code=500
     )

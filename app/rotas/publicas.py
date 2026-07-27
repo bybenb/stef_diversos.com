@@ -103,17 +103,17 @@ async def detalhe_produto(request: Request, produto_id: int, db: Session = Depen
 
 
 @router.get("/carrinho", response_class=HTMLResponse)
-async def ver_carrinho(request: Request, db: Session = Depends(obter_sessao)):
+async def ver_carrinho(request: Request):
     
-    query = db.query(Produto).filter(Produto.esta_ativo == True)
+    # query = db.query(Produto).filter(Produto.esta_ativo == True)
     dados_carrinho = request.session.get("carrinho")
     carrinho = GerenciadorCarrinho.from_dict(dados_carrinho)
-    prod = query.all()  
+    # prod = query.all()  
     
     return templates.TemplateResponse(
         request=request,
         name="carrinho.html",
-        context={"request": request, "carrinho": carrinho, "prod": prod})
+        context={"request": request, "carrinho": carrinho })
 
 
 
@@ -126,7 +126,7 @@ async def adicionar_ao_carrinho(
 ):
     produto = db.query(Produto).filter(Produto.id == produto_id).first()
     if not produto:
-        return {"erro": "Produto não encontrado"}
+        return {"erro": "Produto não achado"}
 
 
     dados_carrinho = request.session.get("carrinho")
