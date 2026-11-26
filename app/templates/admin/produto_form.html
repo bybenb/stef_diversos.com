@@ -56,19 +56,18 @@
                     <input type="number" min="0" name="estoque" class="form-control" placeholder="Ex: 10" value="{{ produto.estoque if produto else 0 }}" required>
                 </div>
 
-                <!-- Upload de Imagem (Cloudinary) -->
                 <div class="col-12">
                     <div class="p-3 border rounded-3 bg-light">
                         <label class="form-label fw-bold d-flex align-items-center justify-content-between">
                             <span>
                                 <i class="bi bi-cloud-arrow-up-fill text-primary me-2"></i>
-                                Upload da Imagem (Cloudinary)
+                                Imagem
                             </span>
-                            <span class="badge bg-primary">Upload automático para Cloudinary</span>
+                            <!-- <span class="badge bg-primary">Upload automático para Cloudinary</span> -->
                         </label>
                         <input type="file" name="imagem" id="inputImagem" class="form-control" accept="image/*">
                         <div class="form-text mt-1">
-                            Formatos recomendados: JPG, PNG, WEBP. A imagem será enviada diretamente para a nuvem da Stef no <strong>Cloudinary</strong>.
+                            Formatos recomendados: JPG, PNG, WEBP. A imagem será enviada diretamente para a nuvem da loja <strong>StefDiversos</strong>.
                         </div>
 
                         <!-- Pré-visualização da imagem -->
@@ -134,11 +133,10 @@
         }
     });
 
-    // Feedback visual durante o upload para o Cloudinary
     formProduto.addEventListener('submit', function() {
         if (inputImagem.files && inputImagem.files.length > 0) {
             btnSalvar.disabled = true;
-            btnSalvar.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Enviando para o Cloudinary...';
+            btnSalvar.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Adicionando a loja...';
         }
     });
 </script>

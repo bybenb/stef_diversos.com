@@ -121,7 +121,6 @@ async def salvar_novo_produto(
     categorias = db.query(Categoria).all()
     url_final = None
 
-    # Verifica se foi enviado arquivo de imagem para upload no Cloudinary
     if imagem and imagem.filename:
         url_cloudinary = upload_imagem_cloudinary(imagem)
         if url_cloudinary:
@@ -143,7 +142,7 @@ async def salvar_novo_produto(
                     },
                     "categorias": categorias,
                     "titulo": "Novo Produto",
-                    "erro": "Erro ao fazer upload da imagem para o Cloudinary. Tente novamente."
+                    "erro": "Erro ao fazer upload da imagem. Contacte a Equipa de TI."
                 },
                 status_code=400
             )
@@ -228,7 +227,6 @@ async def salvar_edicao_produto(
         produto.estoque = estoque
         produto.categoria_id = categoria_id
 
-        # Se foi enviada uma nova imagem para upload no Cloudinary
         if imagem and imagem.filename:
             url_cloudinary = upload_imagem_cloudinary(imagem)
             if url_cloudinary:
@@ -244,7 +242,7 @@ async def salvar_edicao_produto(
                         "produto": produto,
                         "categorias": categorias,
                         "titulo": "Editar Produto",
-                        "erro": "Erro ao fazer upload da nova imagem para o Cloudinary."
+                        "erro": "Erro ao fazer upload da nova imagem. Contacte o Suporte Tecnico."
                     },
                     status_code=400
                 )
