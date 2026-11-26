@@ -1,47 +1,145 @@
 {% extends "admin/base_admin.html" %}
 
 {% block content %}
-<div class="card bg-white shadow-sm">
-    <div class="card-header bg-light">
-        <h4>{{ titulo }}</h4>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>{{ titulo }}</h2>
+    <a href="/admin/produtos" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Voltar para Produtos
+    </a>
+</div>
+
+{% if erro %}
+<div class="alert alert-danger alert-dismissible fade show" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ erro }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}
+
+<div class="card bg-white shadow-sm border-0 rounded-3">
+    <div class="card-header bg-light py-3 border-0">
+        <h5 class="mb-0 text-stef"><i class="bi bi-box-seam me-2"></i>{{ "Cadastrar Novo Produto" if not produto or not produto.id else "Editar Informações do Produto" }}</h5>
     </div>
-    <div class="card-body">
-        <form method="POST">
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label>Nome do Produto</label>
-                    <input type="text" name="nome" class="form-control" value="{{ produto.nome if produto else '' }}" required>
+    <div class="card-body p-4">
+        <form method="POST" enctype="multipart/form-data" id="formProduto">
+            <div class="row g-3">
+                <!-- Nome -->
+                <div class="col-md-8">
+                    <label class="form-label fw-semibold">Nome do Produto <span class="text-danger">*</span></label>
+                    <input type="text" name="nome" class="form-control" placeholder="Ex: Vestido Estampado Floral" value="{{ produto.nome if produto else '' }}" required>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label>Categoria</label>
-                    <select name="categoria_id" class="form-control">
+
+                <!-- Categoria -->
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Categoria <span class="text-danger">*</span></label>
+                    <select name="categoria_id" class="form-select" required>
+                        <option value="">Selecione uma categoria...</option>
                         {% for cat in categorias %}
-                        <option value="{{ cat.id }}" {% if produto and produto.categoria_id == cat.id %}selected{% endif %}>
+                        <option value="{{ cat.id }}" {% if produto and (produto.categoria_id == cat.id or (produto.categoria and produto.categoria.id == cat.id)) %}selected{% endif %}>
                             {{ cat.nome }}
                         </option>
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label>Preço</label>
-                    <input type="number" step="0.01" name="preco" class="form-control" value="{{ produto.preco if produto else '' }}" required>
+
+                <!-- Preço -->
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Preço (Kz) <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <span class="input-group-text">Kz</span>
+                        <input type="number" step="0.01" min="0" name="preco" class="form-control" placeholder="0.00" value="{{ produto.preco if produto else '' }}" required>
+                    </div>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label>Estoque</label>
-                    <input type="number" name="estoque" class="form-control" value="{{ produto.estoque if produto else 0 }}" required>
+
+                <!-- Estoque -->
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Quantidade em Estoque <span class="text-danger">*</span></label>
+                    <input type="number" min="0" name="estoque" class="form-control" placeholder="Ex: 10" value="{{ produto.estoque if produto else 0 }}" required>
                 </div>
-                <div class="col-md-12 mb-3">
-                    <label>URL da Imagem</label>
-                    <input type="text" name="url_imagem" class="form-control" value="{{ produto.url_imagem if produto else '' }}" required>
+
+                <!-- Upload de Imagem (Cloudinary) -->
+                <div class="col-12">
+                    <div class="p-3 border rounded-3 bg-light">
+                        <label class="form-label fw-bold d-flex align-items-center justify-content-between">
+                            <span>
+                                <i class="bi bi-cloud-arrow-up-fill text-primary me-2"></i>
+                                Upload da Imagem (Cloudinary)
+                            </span>
+                            <span class="badge bg-primary">Upload automático para Cloudinary</span>
+                        </label>
+                        <input type="file" name="imagem" id="inputImagem" class="form-control" accept="image/*">
+                        <div class="form-text mt-1">
+                            Formatos recomendados: JPG, PNG, WEBP. A imagem será enviada diretamente para a nuvem da Stef no <strong>Cloudinary</strong>.
+                        </div>
+
+                        <!-- Pré-visualização da imagem -->
+                        <div class="row align-items-center mt-3">
+                            <div class="col-auto" id="containerPreview" style="display: {{ 'block' if produto and produto.url_imagem else 'none' }};">
+                                <p class="small text-muted mb-1 fw-semibold">Visualização:</p>
+                                <img id="previewImg" src="{{ produto.url_imagem if produto and produto.url_imagem else '' }}" alt="Preview" class="rounded border shadow-sm" style="max-width: 140px; max-height: 140px; object-fit: cover;">
+                            </div>
+                            <div class="col">
+                                <label class="form-label small text-muted mb-1">Ou informe uma URL direta de imagem (opcional/fallback):</label>
+                                <input type="text" name="url_imagem" id="inputUrlImagem" class="form-control form-control-sm" placeholder="https://..." value="{{ produto.url_imagem if produto else '' }}">
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md-12 mb-3">
-                    <label>Descrição</label>
-                    <textarea name="descricao" class="form-control" rows="3">{{ produto.descricao if produto else '' }}</textarea>
+
+                <!-- Descrição -->
+                <div class="col-12">
+                    <label class="form-label fw-semibold">Descrição do Produto</label>
+                    <textarea name="descricao" class="form-control" rows="4" placeholder="Descreva os detalhes do produto, tamanho, material, etc...">{{ produto.descricao if produto else '' }}</textarea>
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary">Salvar Produto</button>
-            <a href="/admin/produtos" class="btn btn-secondary">Cancelar</a>
+
+            <hr class="my-4">
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-stef px-4 py-2 text-white" id="btnSalvar" style="background-color: var(--rosa-principal);">
+                    <i class="bi bi-check-circle me-1"></i> Salvar Produto
+                </button>
+                <a href="/admin/produtos" class="btn btn-secondary px-4 py-2">Cancelar</a>
+            </div>
         </form>
     </div>
 </div>
+
+<script>
+    // Preview dinâmico do upload de imagem
+    const inputImagem = document.getElementById('inputImagem');
+    const inputUrl = document.getElementById('inputUrlImagem');
+    const previewImg = document.getElementById('previewImg');
+    const containerPreview = document.getElementById('containerPreview');
+    const formProduto = document.getElementById('formProduto');
+    const btnSalvar = document.getElementById('btnSalvar');
+
+    inputImagem.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                previewImg.src = evt.target.result;
+                containerPreview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    inputUrl.addEventListener('input', function(e) {
+        if (!inputImagem.files || inputImagem.files.length === 0) {
+            if (e.target.value.trim().length > 5) {
+                previewImg.src = e.target.value.trim();
+                containerPreview.style.display = 'block';
+            }
+        }
+    });
+
+    // Feedback visual durante o upload para o Cloudinary
+    formProduto.addEventListener('submit', function() {
+        if (inputImagem.files && inputImagem.files.length > 0) {
+            btnSalvar.disabled = true;
+            btnSalvar.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Enviando para o Cloudinary...';
+        }
+    });
+</script>
 {% endblock %}

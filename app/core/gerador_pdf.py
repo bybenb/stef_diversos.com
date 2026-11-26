@@ -1,9 +1,11 @@
 import io
+import urllib.request
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from reportlab.lib import colors
 from reportlab.platypus import Table, TableStyle
 from reportlab.lib.units import cm
+from reportlab.lib.utils import ImageReader
 
 def gerar_fatura_pdf(pedido, cliente, itens, metodo):
     """
@@ -14,7 +16,23 @@ def gerar_fatura_pdf(pedido, cliente, itens, metodo):
     c = canvas.Canvas(buffer, pagesize=A4)
     width, height = A4
     
-    # Cabeçalho da Empresa
+    
+    # caminho_logo = "app/static/imagens/logo.png" 
+    # logo = ImageReader(caminho_logo)
+    
+
+    url_logo = "https://stef-diversos.onrender.com/static/img/logo.png" 
+    try:
+        req = urllib.request.Request(url_logo, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req) as response:
+            logo_data = response.read()
+        logo = ImageReader(io.BytesIO(logo_data))
+        
+        c.drawImage(logo, width - 8.5*cm, height - 6.5*cm, width=8*cm, height=5*cm, preserveAspectRatio=True, mask='auto')
+    except Exception as e:
+        print(f"Não foi possível carregar a logo: {e}")
+
+
     c.setFont("Helvetica-Bold", 20)
     c.setFillColor(colors.HexColor("#b74265"))
     c.drawString(2*cm, height - 2*cm, "Stef Diversos")
@@ -81,5 +99,3 @@ def gerar_fatura_pdf(pedido, cliente, itens, metodo):
     c.save()
     buffer.seek(0)  # Rebobina o buffer para o início
     return buffer
-
-

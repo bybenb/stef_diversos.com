@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Request, Form, Depends
+from fastapi import APIRouter, Request, Form, Depends, UploadFile, File
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.modelos.banco import obter_sessao
 from app.modelos.entidades import Produto, Categoria, Pedido, Cliente
 from app.core.autenticacao import obter_usuario_admin
+from app.core.upload import upload_imagem_cloudinary
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 templates = Jinja2Templates(directory="app/templates")
@@ -108,17 +109,76 @@ async def novo_produto_form(
 async def salvar_novo_produto(
     request: Request,
     nome: str = Form(...),
-    descricao: str = Form(...),
+    descricao: str = Form(""),
     preco: float = Form(...),
     estoque: int = Form(...),
-    url_imagem: str = Form(...),
     categoria_id: int = Form(...),
+    imagem: UploadFile = File(None),
+    url_imagem: str = Form(None),
     usuario: dict = Depends(obter_usuario_admin),
     db: Session = Depends(obter_sessao)
 ):
+    categorias = db.query(Categoria).all()
+    url_final = None
+
+    # Verifica se foi enviado arquivo de imagem para upload no Cloudinary
+    if imagem and imagem.filename:
+        url_cloudinary = upload_imagem_cloudinary(imagem)
+        if url_cloudinary:
+            url_final = url_cloudinary
+        else:
+            return templates.TemplateResponse(
+                request=request,
+                name="admin/produto_form.html",
+                context={
+                    "request": request,
+                    "usuario": usuario,
+                    "produto": {
+                        "nome": nome,
+                        "descricao": descricao,
+                        "preco": preco,
+                        "estoque": estoque,
+                        "categoria_id": categoria_id,
+                        "url_imagem": url_imagem
+                    },
+                    "categorias": categorias,
+                    "titulo": "Novo Produto",
+                    "erro": "Erro ao fazer upload da imagem para o Cloudinary. Tente novamente."
+                },
+                status_code=400
+            )
+    elif url_imagem and url_imagem.strip():
+        url_final = url_imagem.strip()
+
+    if not url_final:
+        return templates.TemplateResponse(
+            request=request,
+            name="admin/produto_form.html",
+            context={
+                "request": request,
+                "usuario": usuario,
+                "produto": {
+                    "nome": nome,
+                    "descricao": descricao,
+                    "preco": preco,
+                    "estoque": estoque,
+                    "categoria_id": categoria_id,
+                    "url_imagem": ""
+                },
+                "categorias": categorias,
+                "titulo": "Novo Produto",
+                "erro": "Por favor, selecione uma imagem para upload ou informe uma URL válida."
+            },
+            status_code=400
+        )
+
     novo_produto = Produto(
-        nome=nome, descricao=descricao, preco=preco, 
-        estoque=estoque, url_imagem=url_imagem, categoria_id=categoria_id
+        nome=nome,
+        descricao=descricao,
+        preco=preco, 
+        estoque=estoque,
+        url_imagem=url_final,
+        categoria_id=categoria_id
     )
     db.add(novo_produto)
     db.commit()
@@ -151,11 +211,12 @@ async def salvar_edicao_produto(
     request: Request,
     produto_id: int,
     nome: str = Form(...),
-    descricao: str = Form(...),
+    descricao: str = Form(""),
     preco: float = Form(...),
     estoque: int = Form(...),
-    url_imagem: str = Form(...),
     categoria_id: int = Form(...),
+    imagem: UploadFile = File(None),
+    url_imagem: str = Form(None),
     usuario: dict = Depends(obter_usuario_admin),
     db: Session = Depends(obter_sessao)
 ):
@@ -165,8 +226,31 @@ async def salvar_edicao_produto(
         produto.descricao = descricao
         produto.preco = preco
         produto.estoque = estoque
-        produto.url_imagem = url_imagem
         produto.categoria_id = categoria_id
+
+        # Se foi enviada uma nova imagem para upload no Cloudinary
+        if imagem and imagem.filename:
+            url_cloudinary = upload_imagem_cloudinary(imagem)
+            if url_cloudinary:
+                produto.url_imagem = url_cloudinary
+            else:
+                categorias = db.query(Categoria).all()
+                return templates.TemplateResponse(
+                    request=request,
+                    name="admin/produto_form.html",
+                    context={
+                        "request": request,
+                        "usuario": usuario,
+                        "produto": produto,
+                        "categorias": categorias,
+                        "titulo": "Editar Produto",
+                        "erro": "Erro ao fazer upload da nova imagem para o Cloudinary."
+                    },
+                    status_code=400
+                )
+        elif url_imagem and url_imagem.strip():
+            produto.url_imagem = url_imagem.strip()
+
         db.commit()
     return RedirectResponse(url="/admin/produtos", status_code=303)
 
@@ -200,11 +284,35 @@ async def listar_pedidos(
             "pedidos": pedidos
         })
 
+@router.get("/pedidos/{pedido_id}", response_class=HTMLResponse)
+async def detalhe_pedido(
+    request: Request,
+    pedido_id: int,
+    usuario: dict = Depends(obter_usuario_admin),
+    db: Session = Depends(obter_sessao)
+):
+    pedido = db.query(Pedido).filter(Pedido.id == pedido_id).first()
+    if not pedido:
+        return RedirectResponse(url="/admin/pedidos", status_code=303)
+
+    return templates.TemplateResponse(
+        request=request,
+        name="admin/pedido_detalhe.html",
+        context={
+            "request": request,
+            "usuario": usuario,
+            "pedido": pedido,
+            "cliente": pedido.cliente,
+            "itens": pedido.itens
+        }
+    )
+
 @router.post("/pedidos/status/{pedido_id}")
 async def atualizar_status_pedido(
     request: Request,
     pedido_id: int,
     status: str = Form(...),
+    redirect_to: str = Form(None),
     usuario: dict = Depends(obter_usuario_admin),
     db: Session = Depends(obter_sessao)
 ):
@@ -212,4 +320,6 @@ async def atualizar_status_pedido(
     if pedido:
         pedido.status = status
         db.commit()
+    if redirect_to:
+        return RedirectResponse(url=redirect_to, status_code=303)
     return RedirectResponse(url="/admin/pedidos", status_code=303)
