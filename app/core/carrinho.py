@@ -4,7 +4,7 @@ class GerenciadorCarrinho:
     def __init__(self):
         self.itens: Dict[int, Dict[str, Any]] = {}  # {id: {'nome': x, 'preco': y, 'quantidade': z}}
 
-    def adicionar_item(self, produto_id: int, nome: str, preco: float, quantidade: int = 1):
+    def adicionar_item(self, produto_id: int, nome: str, preco: float, url_imagem=None, quantidade: int = 1):
         if produto_id in self.itens:
             self.itens[produto_id]['quantidade'] += quantidade
         else:
