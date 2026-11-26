@@ -11,3 +11,4 @@ cloudinary
 clerk-backend-api
 itsdangerous
 reportlab
+psycopg[binary]
